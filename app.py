@@ -74,6 +74,7 @@ def connected():
 	emit('data', ifDetail('wlan1'), broadcast=True)
 	while True:
 		time.sleep(1)
+		ifDetail("wlan1")
 		emit('data', ifDetail('wlan1'), broadcast=True)
 
 @socketio.on("disconnect")
