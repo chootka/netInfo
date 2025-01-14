@@ -1,9 +1,14 @@
 import subprocess
 import pyric             # pyric errors
 import pyric.pyw as pyw  # iw functionality
-from flask import Flask
+import time
+from flask_cors import CORS
+from flask_socketio import SocketIO, emit
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+CORS(app, resource={r"/*":{"origins":"*"}})
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route('/')
 def hello():
@@ -62,5 +67,20 @@ def ifDetail(id):
 
     return details
 
+@socketio.on("connect")
+def connected():
+	print("client has connected at")
+	print(request.remote_addr)
+	emit('data', ifDetail('wlan1'), broadcast=True)
+	while True:
+		time.sleep(1)
+		emit('data', ifDetail('wlan1'), broadcast=True)
+
+@socketio.on("disconnect")
+def disconnected():
+	print("user disconnected")
+	emit("disconnect", f"user {request.remote_addr} disconnected", broadcast=True)
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+	socketio.run(app, port=5000, host='0.0.0.0', debug=True)
+	#app.run(host='0.0.0.0', port=5000)
