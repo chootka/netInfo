@@ -5,10 +5,36 @@ import time
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from flask import Flask, request, jsonify
+from threading import Lock
+import atexit
 
 app = Flask(__name__)
 CORS(app, resource={r"/*":{"origins":"*"}})
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+thread = None
+thread_lock = Lock()
+
+def background_task():
+    """Background task to emit wireless interface data"""
+    while True:
+        try:
+            with thread_lock:
+                data = ifDetail("wlan1")
+                socketio.emit('data', data, broadcast=True)
+            time.sleep(1)
+        except Exception as e:
+            print(f"Error in background task: {e}")
+            socketio.emit('error', {'message': str(e)}, broadcast=True)
+            break
+
+def cleanup():
+    global thread
+    if thread is not None:
+        # Signal the thread to stop (you'll need to implement this mechanism)
+        print("Cleaning up resources...")
+
+atexit.register(cleanup)
 
 @app.route('/')
 def hello():
@@ -69,18 +95,21 @@ def ifDetail(id):
 
 @socketio.on("connect")
 def connected(auth):
+    global thread
     print("client has connected at")
     print(request.remote_addr)
+    
     try:
+        # Initial data emit
         data = ifDetail('wlan1')
         emit('data', data, broadcast=True)
-        while True:
-            time.sleep(1)
-            data = ifDetail("wlan1")
-            emit('data', data, broadcast=True)
+        
+        # Start background thread if it isn't already running
+        with thread_lock:
+            if thread is None:
+                thread = socketio.start_background_task(background_task)
     except Exception as e:
         print(f"Error in connected handler: {e}")
-        # Optionally emit error to client
         emit('error', {'message': str(e)}, broadcast=True)
 
 @socketio.on("disconnect")
