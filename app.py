@@ -21,11 +21,11 @@ def background_task():
         try:
             with thread_lock:
                 data = ifDetail("wlan1")
-                socketio.emit('data', data, broadcast=True)
+                socketio.emit('data', data, namespace='/')
             time.sleep(1)
         except Exception as e:
             print(f"Error in background task: {e}")
-            socketio.emit('error', {'message': str(e)}, broadcast=True)
+            socketio.emit('error', {'message': str(e)}, namespace='/')
             break
 
 def cleanup():
