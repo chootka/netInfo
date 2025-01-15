@@ -68,20 +68,32 @@ def ifDetail(id):
     return details
 
 @socketio.on("connect")
-def connected():
-	print("client has connected at")
-	print(request.remote_addr)
-	emit('data', ifDetail('wlan1'), broadcast=True)
-	while True:
-		time.sleep(1)
-		ifDetail("wlan1")
-		emit('data', ifDetail('wlan1'), broadcast=True)
+def connected(auth):
+    print("client has connected at")
+    print(request.remote_addr)
+    try:
+        data = ifDetail('wlan1')
+        emit('data', data, broadcast=True)
+        while True:
+            time.sleep(1)
+            data = ifDetail("wlan1")
+            emit('data', data, broadcast=True)
+    except Exception as e:
+        print(f"Error in connected handler: {e}")
+        # Optionally emit error to client
+        emit('error', {'message': str(e)}, broadcast=True)
 
 @socketio.on("disconnect")
 def disconnected():
-	print("user disconnected")
-	emit("disconnect", f"user {request.remote_addr} disconnected", broadcast=True)
+    print("user disconnected")
+    emit("disconnect", f"user {request.remote_addr} disconnected", broadcast=True)
 
 if __name__ == '__main__':
-	socketio.run(app, port=5000, host='0.0.0.0', debug=True)
-	#app.run(host='0.0.0.0', port=5000)
+    try:
+        socketio.run(app, port=5000, host='0.0.0.0', debug=True, allow_unsafe_werkzeug=True)
+    except OSError as e:
+        if e.errno == 98:
+            print("Port 5000 is already in use. Please kill any existing processes using this port.")
+            print("You can use: sudo lsof -i :5000 to find processes using port 5000")
+            print("Then use: kill -9 <PID> to kill the process")
+        raise
