@@ -75,8 +75,6 @@ def ifDetail(id):
             client["signal"] = sig_val.stdout.strip()
             clients.append(client)
             index += 1
-        else:
-            clients.append("No clients found")
 
         details = {
             "card": w0,
