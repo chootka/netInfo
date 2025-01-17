@@ -7,7 +7,7 @@ User=<your username>
 Group=www-data
 WorkingDirectory=<path/to/netInfo/>
 Environment="PATH=<path/to/netInfo/>venv/bin"
-ExecStart=<path/to/netInfo/>venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 --reload -m 007 wsgi:app
+ExecStart=<path/to/netInfo/>venv/bin/gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:5000 --reload -m 007 wsgi:app
 
 [Install]
 WantedBy=multi-user.target
