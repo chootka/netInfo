@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve netInfo application
+After=network.target
+
+[Service]
+User=<your username>
+Group=www-data
+WorkingDirectory=<path/to/netInfo/>
+Environment="PATH=<path/to/netInfo/>venv/bin"
+ExecStart=<path/to/netInfo/>venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 --reload -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
